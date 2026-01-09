@@ -33,9 +33,7 @@ user_pairs = {}
 user_expirations = {}
 
 def generate_signal():
-    if random.random() > 0.48:
-        return "ВВЕРХ"
-    return "ВНИЗ"
+    return "ВВЕРХ" if random.random() > 0.48 else "ВНИЗ"
 
 @bot.message_handler(commands=['start'])
 def start(message):
@@ -47,14 +45,50 @@ def start(message):
 
 @bot.callback_query_handler(func=lambda call: True)
 def callback_query(call):
-    if call.data == "menu_main":
-        markup = InlineKeyboardMarkup(row_width=2)
-        markup.add(InlineKeyboardButton("📈 ФОРЕКС", callback_data="menu_forex"))
-        markup.add(InlineKeyboardButton("💱 OTC ВАЛЮТА", callback_data="menu_otc"))
-        markup.add(InlineKeyboardButton("₿ КРИПТА", callback_data="menu_crypto"))
-        bot.edit_message_text("🚀 Выберите актив:", call.message.chat.id, call.message.message_id, reply_markup=markup)
+    try:
+        if call.data == "menu_forex":
+            markup = InlineKeyboardMarkup(row_width=2)
+            for i in range(0, len(FOREX_PAIRS), 2):
+                if i+1 < len(FOREX_PAIRS):
+                    markup.add(
+                        InlineKeyboardButton(FOREX_PAIRS[i], callback_data=f"pair_{FOREX_PAIRS[i]}"),
+                        InlineKeyboardButton(FOREX_PAIRS[i+1], callback_data=f"pair_{FOREX_PAIRS[i+1]}")
+                    )
+                else:
+                    markup.add(InlineKeyboardButton(FOREX_PAIRS[i], callback_data=f"pair_{FOREX_PAIRS[i]}"))
+            markup.add(InlineKeyboardButton("🔙 Главное меню", callback_data="menu_main"))
+            bot.edit_message_text("📈 ФОРЕКС ПАРЫ:", call.message.chat.id, call.message.message_id, reply_markup=markup)
 
-    elif call.data == "menu_forex":
-        markup = InlineKeyboardMarkup(row_width=2)
-        for i in range(0, len(FOREX_PAIRS
+        elif call.data == "menu_otc":
+            markup = InlineKeyboardMarkup(row_width=2)
+            for i in range(0, len(FOREX_OTC_PAIRS), 2):
+                if i+1 < len(FOREX_OTC_PAIRS):
+                    markup.add(
+                        InlineKeyboardButton(FOREX_OTC_PAIRS[i], callback_data=f"pair_{FOREX_OTC_PAIRS[i]}"),
+                        InlineKeyboardButton(FOREX_OTC_PAIRS[i+1], callback_data=f"pair_{FOREX_OTC_PAIRS[i+1]}")
+                    )
+                else:
+                    markup.add(InlineKeyboardButton(FOREX_OTC_PAIRS[i], callback_data=f"pair_{FOREX_OTC_PAIRS[i]}"))
+            markup.add(InlineKeyboardButton("🔙 Главное меню", callback_data="menu_main"))
+            bot.edit_message_text("💱 OTC ВАЛЮТНЫЕ ПАРЫ:", call.message.chat.id, call.message.message_id, reply_markup=markup)
 
+        elif call.data == "menu_crypto":
+            markup = InlineKeyboardMarkup(row_width=2)
+            for i in range(0, len(CRYPTO_PAIRS), 2):
+                if i+1 < len(CRYPTO_PAIRS):
+                    markup.add(
+                        InlineKeyboardButton(CRYPTO_PAIRS[i], callback_data=f"pair_{CRYPTO_PAIRS[i]}"),
+                        InlineKeyboardButton(CRYPTO_PAIRS[i+1], callback_data=f"pair_{CRYPTO_PAIRS[i+1]}")
+                    )
+                else:
+                    markup.add(InlineKeyboardButton(CRYPTO_PAIRS[i], callback_data=f"pair_{CRYPTO_PAIRS[i]}"))
+            markup.add(InlineKeyboardButton("🔙 Главное меню", callback_data="menu_main"))
+            bot.edit_message_text("₿ КРИПТОВАЛЮТЫ OTC:", call.message.chat.id, call.message.message_id, reply_markup=markup)
+
+        elif call.data.startswith("pair_"):
+            pair = call.data[5:]
+            user_pairs[call.message.chat.id] = pair
+            markup = InlineKeyboardMarkup(row_width=2)
+            markup.add(InlineKeyboardButton("1 МИН", callback_data=f"time_{call.message.chat.id}_1"))
+            markup.add(InlineKeyboardButton("2 МИН", callback_data=f"time_{call.message.chat.id}_2"))
+            markup.add(InlineKeyboardButton("3 МИН", call
